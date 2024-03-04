@@ -1,0 +1,39 @@
+import org.apache.poi.ss.usermodel.*
+import java.io.FileInputStream
+
+// Define the path to your Excel file
+def excelFilePath = "C:/Users/Srivani/OneDrive/Desktop/Data.xlsx"
+
+// Define the sheet name
+def sheetName = "Sheet1"
+
+// Load the Excel file
+def file = new FileInputStream(excelFilePath)
+def workbook = WorkbookFactory.create(file)
+def sheet = workbook.getSheet(sheetName)
+
+// Iterate through each row starting from the first row
+for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+    def row = sheet.getRow(i)
+
+    // Retrieve 3 values from the current row (assuming columns A, B, and C)
+    def name = row.getCell(0).toString() // Value from column A
+    def salary = row.getCell(1).toString() // Value from column B
+    def age = row.getCell(2).toString()   // Value from column C
+
+    // Set the retrieved data as properties
+    testRunner.testCase.setPropertyValue("Name", name)
+    testRunner.testCase.setPropertyValue("Salary", salary)
+    testRunner.testCase.setPropertyValue("Age", age)
+
+    // Process the retrieved values
+    println "Row ${i + 1}: $name, $salary, $age"
+
+    // Log the retrieved values for validation
+    log.info("Name: $name")
+    log.info("Salary: $salary")
+    log.info("Age: $age")
+}
+
+// Close the Excel file
+file.close()

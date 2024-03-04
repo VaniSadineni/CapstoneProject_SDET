@@ -1,0 +1,276 @@
+-------com.qa.pages--------------
+>>>LoginPage.java
+
+package com.qa.pages;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.FindBy;
+import org.openqa.selenium.support.PageFactory;  
+	public class LoginPage {
+		
+		
+	    WebDriver driver;
+		public LoginPage(WebDriver d) {
+			this.driver=d;
+			PageFactory.initElements(d, this);
+		}
+		
+		@FindBy(id="user-name")
+		WebElement usernameElement;
+		public void enterUsername(String username) {
+	        usernameElement.sendKeys(username);
+		}
+		@FindBy(id="password")
+		WebElement passwordElement;
+		public void enterPassword(String password) {
+			passwordElement.sendKeys(password);
+		}
+		
+		@FindBy(css=".btn_action")
+		WebElement loginButtonElement;
+		 public void clickLoginButton() {
+		        loginButtonElement.click();
+		    }
+		
+		@FindBy(css="h3[data-test='error']")
+		 WebElement errorElement;
+		  public String getErrorMessage() {
+	        return errorElement.getText();
+	    }
+	    
+	    @FindBy(id="user-name")
+		WebElement usernameEle;
+		public void clickUsername(String username) {
+	        usernameElement.clear();
+		}
+		@FindBy(id="password")
+		WebElement passwordEle;
+		public void clickPassword(String password) {
+			passwordElement.clear();
+		}
+
+		
+		
+
+	}
+
+
+
+------------------com.qa.TestScripts-------------------
+>>>BaseClass.java
+
+package com.qa.TestScripts;
+
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
+
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.testng.annotations.AfterTest;
+import org.testng.annotations.BeforeTest;
+import org.testng.annotations.DataProvider;
+import com.qa.pages.LoginPage;
+import com.qa.utility.xlsread;
+
+import io.cucumber.java.en.Given;
+
+public class BaseClass {
+	public static WebDriver driver;
+	LoginPage loginpage;
+	
+	@Given ("I am on the saucedemo login page")
+	@BeforeTest
+	public void iAmonLoginPage() throws InterruptedException { 
+		// Initialize WebDriver and navigate to the saucedemo URL
+		System.setProperty("webdriver.chrome.driver", "src/test/java/com/qa/resources/chromedriver.exe");
+		driver = new ChromeDriver();
+	    driver.manage().window().maximize();
+		driver.get("https://www.saucedemo.com/"); driver.manage().window().maximize();
+		driver.manage().timeouts().implicitlyWait(3000, TimeUnit.MILLISECONDS);
+		
+	}
+	@DataProvider()
+	public String[][] readData() throws IOException
+	{
+	String path="src/test/java/com/qa/utility/excel_capstoneproject_3.xlsx";
+	xlsread xls =new xlsread (path);
+	int rowCount =xls.getRowCount("Sheet1"); int colCount =xls.getColCount ("Sheet1", rowCount);
+	String inputdata[][]= new String[rowCount][colCount];
+	for (int i=1;i<=rowCount; i++) {
+	for (int j=0;j<colCount;j++){
+	inputdata[i-1][j]=xls.getCellData("Sheet1", i, j);
+	}
+	}
+
+	return inputdata;
+
+}
+
+	
+	@AfterTest
+    public void tearDown() {
+       
+            driver.quit();
+        
+    }
+	
+    }
+
+
+>>>>TC_LoginPage.java
+
+package com.qa.TestScripts;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+import org.testng.annotations.Test;
+import com.qa.pages.LoginPage;
+import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;	
+public class TC_LoginPage extends BaseClass {
+	@When ("I enter my username and password And I click on the Submit button")
+    @Test(dataProvider="readData", priority=0)
+	
+	public void enterUsernameAndPassword (String Username, String Password) { 
+    LoginPage lp=new LoginPage(driver);
+	lp.enterUsername(Username);
+    lp.enterPassword(Password);
+    lp.clickLoginButton();
+
+    String pageURL= driver.getCurrentUrl(); // If the page title is Swag Labs, perform a logout function.
+    if (pageURL.equals("https://www.saucedemo.com/inventory.html"))
+		{ 
+			driver.findElement(By.id("react-burger-menu-btn")).click(); 
+			driver.findElement(By.id("logout_sidebar_link")).click();
+		}
+         else 
+		{
+        	 lp.clickUsername(Username);
+        	 lp.clickPassword(Password);
+             
+         
+		}
+}
+	
+	    @Then ("I should see the title of the page as {string}") 
+		@Test(priority=2) 
+		public void verifyTitle() 
+		{
+			/*String actualTitle = driver.getTitle(); 
+			System.out.println(actual Title); 
+			assert actualTitle.equals (expectedTitle);*/
+	    	
+       WebDriverWait wait = new WebDriverWait (driver, 10); wait.until(ExpectedConditions.titleContains("Swag Labs"));
+       // Verify the title of the page 
+       String expectedTitle = "Swag Labs"; 
+       String actualTitle = driver.getTitle();
+
+       if (actualTitle.equals(expectedTitle)) {
+    	   System.out.println("Title verification successful");
+       }
+       else
+       {
+    	  System.out.println("Title verification failed");
+       }
+		}
+		
+	    
+		@Then("I should see an error message")
+		@Test(priority=3)
+		public void verifyErrorMessage()
+		{ 
+			/* WebElement errorElement = driver.findElement(By.cssSelector(".error-message"));
+			 assert errorElement.isDisplayed();*/
+			 WebElement errorMessage = driver.findElement(By.cssSelector("h3[data-test='error']"));
+			 String expectedErrorMessage="Epic sadface: Username and password do not match any user in this service";
+			 String actualErrorMessage = errorMessage .getText(); 
+			 if (actualErrorMessage.equals(expectedErrorMessage)) 
+			 {
+				 System.out.println("Error message verification successful");
+			 }
+			 else
+			 {
+				 System.out.println("Error message verification failed");
+			 }
+		}
+		
+		
+
+	}
+
+
+
+
+-------------------------------com.qa.utility-----------------------------------------
+>>>xlsread.java
+
+package com.qa.utility;
+
+import java.io.FileInputStream; 
+import java.io.IOException;
+import org.apache.poi.ss.usermodel.DataFormatter;
+import org.apache.poi.xssf.usermodel.XSSFCell;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+public class xlsread { 
+	// will using 6 variables
+public FileInputStream fi;
+public XSSFWorkbook workbook;
+public XSSFSheet sheet;
+public XSSFRow row;
+public XSSFCell cell;
+String path;
+
+//take the path in the constructer
+
+public xlsread(String path1)
+{
+	this.path=path1;
+}
+public int getRowCount (String sheetname) throws IOException
+{
+	fi =new FileInputStream(path);
+    workbook =new XSSFWorkbook (fi);
+    sheet =workbook.getSheet (sheetname);
+    int rowcount=sheet.getLastRowNum(); 
+    workbook.close();
+    fi.close(); 
+    return rowcount;
+}
+
+    public int getColCount (String sheetname, int rownumber) throws IOException
+    {
+    fi=new FileInputStream(path);
+    workbook =new XSSFWorkbook (fi);
+    sheet =workbook.getSheet (sheetname);
+    row=sheet.getRow(rownumber);
+    int colcount=row.getLastCellNum();
+    workbook.close();
+    fi.close(); 
+    return colcount;
+    }
+    
+    public String getCellData(String sheetname, int rownumber, int colnumber) throws IOException
+    {
+    fi=new FileInputStream(path); 
+    workbook =new XSSFWorkbook (fi);
+    sheet =workbook.getSheet (sheetname);
+    row =sheet.getRow(rownumber); 
+    cell=row.getCell(colnumber);
+    //what to check this particular contains which type of value so use dataformatter
+    DataFormatter df=new DataFormatter();
+    String data;
+
+    try {
+    	data=df.formatCellValue(cell); ////whataever the value i have reacievd fro cell sheet that it will be formatted on top that particular value and it will store in string format data attribute not data variable
+    	} catch (Exception e) {
+    	data="";  //where thetre is exception, data=empty
+    	}
+
+    	return data;
+    }
+}
+

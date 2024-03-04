@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<con:soapui-project id="c2831ae7-789e-4a2a-9970-ebb5e681552f" activeEnvironment="Default" name="SDETCapstoneProject" resourceRoot="" soapui-version="5.7.2" abortOnError="false" runType="SEQUENTIAL" xmlns:con="http://eviware.com/soapui/config"><con:settings/><con:testSuite id="88f3bf9d-e770-4f19-a6ff-7ff60012bd8d" name="TestSuiteSDET"><con:settings/><con:runType>SEQUENTIAL</con:runType><con:testCase id="26adef59-6c22-4773-9b35-138486427e51" failOnError="true" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="TestCaseSDET" searchProperties="true"><con:settings/><con:testStep type="groovy" name="GroovySDET" id="238ae052-5dc8-4bf4-9b81-e9c5567f6270"><con:settings/><con:config><script>import org.apache.poi.ss.usermodel.*
+import java.io.FileInputStream
+
+// Define the path to your Excel file
+def excelFilePath = "C:/Users/Srivani/OneDrive/Desktop/Data.xlsx"
+
+// Define the sheet name
+def sheetName = "Sheet1"
+
+// Load the Excel file
+def file = new FileInputStream(excelFilePath)
+def workbook = WorkbookFactory.create(file)
+def sheet = workbook.getSheet(sheetName)
+
+// Iterate through each row starting from the first row
+for (int i = 1; i &lt;= sheet.getLastRowNum(); i++) {
+    def row = sheet.getRow(i)
+
+    // Retrieve 3 values from the current row (assuming columns A, B, and C)
+    def name = row.getCell(0).toString() // Value from column A
+    def salary = row.getCell(1).toString() // Value from column B
+    def age = row.getCell(2).toString()   // Value from column C
+
+    // Set the retrieved data as properties
+    testRunner.testCase.setPropertyValue("Name", name)
+    testRunner.testCase.setPropertyValue("Salary", salary)
+    testRunner.testCase.setPropertyValue("Age", age)
+
+    // Process the retrieved values
+    println "Row ${i + 1}: $name, $salary, $age"
+
+    // Log the retrieved values for validation
+    log.info("Name: $name")
+    log.info("Salary: $salary")
+    log.info("Age: $age")
+}
+
+// Close the Excel file
+file.close()
+</script></con:config></con:testStep><con:testStep type="httprequest" name="HTTP Request" id="1809c701-a484-4eb0-bfd3-d5fb8ffab095"><con:settings/><con:config method="POST" xsi:type="con:HttpRequest" id="31a1a332-50c1-40f8-a210-395e4e0a989e" name="HTTP Request" postQueryString="false" mediaType="application/json" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:endpoint>https://dummy.restapiexample.com/api/v1/create</con:endpoint><con:request>{
+    "name": "${#TestCase#Name}",
+    "salary": "${#TestCase#Salary}",
+    "age": "${#TestCase#Age}"
+}</con:request><con:assertion type="Valid HTTP Status Codes" id="5ba84199-fb37-42ef-bef9-ce35c552f907" name="Valid HTTP Status Codes"><con:configuration><codes>200</codes></con:configuration></con:assertion><con:assertion type="GroovyScriptAssertion" id="4ea731f1-6d4b-424c-a29a-e0bb018af65f" name="Verify Response"><con:configuration><scriptText>import groovy.json.JsonSlurper
+
+def response = messageExchange.response.responseContent
+def json = new JsonSlurper().parseText(response)
+
+assert json.status == 'success' : "Expected 'status' to be 'success', but found: ${json.status}"
+</scriptText></con:configuration></con:assertion><con:assertion type="Invalid HTTP Status Codes" id="f70316b5-8135-4da7-8625-eb63c94e5e4d" name="Invalid HTTP Status Codes"><con:configuration><codes>405</codes></con:configuration></con:assertion><con:assertion type="GroovyScriptAssertion" id="b3d13fde-0634-4663-b92c-90172003eda3" name="Error Resposnse Negative"><con:configuration><scriptText>import groovy.json.JsonSlurper
+
+def response = messageExchange.response.responseContent
+def json = new JsonSlurper().parseText(response)
+
+
+assert json.error_message != null : "Expected 'error_message' field to be present in the response."
+
+</scriptText></con:configuration></con:assertion><con:assertion type="GroovyScriptAssertion" id="c277aad9-33de-4c43-82b0-c57e9020c685" name="Verify Name"><con:configuration><scriptText>import groovy.json.JsonSlurper
+
+def response = messageExchange.response.responseContent
+def json = new JsonSlurper().parseText(response)
+
+// Validate 'name' field
+def expectedName = "Priya" // Replace with the expected value or use a variable
+assert json.data.name == expectedName : "Expected 'name' to be '${expectedName}', but found: ${json.data.name}"
+</scriptText></con:configuration></con:assertion><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters/></con:config></con:testStep><con:properties><con:property><con:name>Name</con:name><con:value>Priya</con:value></con:property><con:property><con:name>Salary</con:name><con:value>30000.0</con:value></con:property><con:property><con:name>Age</con:name><con:value>22.0</con:value></con:property></con:properties></con:testCase><con:properties/></con:testSuite><con:properties/><con:wssContainer/><con:oAuth2ProfileContainer/><con:oAuth1ProfileContainer/><con:sensitiveInformation/></con:soapui-project>

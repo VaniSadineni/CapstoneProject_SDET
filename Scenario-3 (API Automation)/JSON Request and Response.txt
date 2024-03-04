@@ -1,0 +1,23 @@
+JSON Request:
+
+{
+    "name": "${#TestCase#Name}",
+    "salary": "${#TestCase#Salary}",
+    "age": "${#TestCase#Age}"
+}
+
+
+
+
+Response:
+
+{
+   "status": "success",
+   "data":    {
+      "name": "Priya",
+      "salary": "30000.0",
+      "age": "22.0",
+      "id": 6971
+   },
+   "message": "Successfully! Record has been added."
+}
